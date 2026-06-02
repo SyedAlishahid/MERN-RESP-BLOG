@@ -120,7 +120,8 @@ const login = async (req, res) => {
       secure: true,
       httpOnly: true,
     };
-
+    userInfo.lastLogin = new Date();
+    await userInfo.save();
     return res
       .status(200)
       .cookie("accessToken", accessToken, opt)
@@ -215,6 +216,58 @@ const userDetails = async (req, res) => {
     return res.status(200).json({
       success: true,
       payload: userInfo,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+      success: false,
+    });
+  }
+};
+
+const changePicture = async (req, res) => {
+  try {
+    const newProfileImg = req.files.NewProfile?.[0]?.path;
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(500).json({
+        message: "Id not found",
+        success: false,
+      });
+    }
+
+    const uploadNewImage = await VideoUploader(newProfileImg);
+
+    if (!uploadNewImage) {
+      return res.status(400).json({
+        message: "Cant upload on cloudinary~",
+        success: false,
+      });
+    }
+
+    const findNupdate = await User.findByIdAndUpdate(
+      userId,
+      {
+        profile: uploadNewImage.secure_url,
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+
+    if (!findNupdate) {
+      return res.status(404).json({
+        success: false,
+        message: "image not updated",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Image updated successfully",
+      NewProfile: findNupdate,
     });
   } catch (error) {
     return res.status(500).json({
@@ -387,7 +440,7 @@ const createBlog = async (req, res) => {
 
 const deleteBlog = async (req, res) => {
   try {
-    const deleteBlg = req.params;
+    const { deleteBlg } = req.params;
 
     if (!deleteBlg) {
       return res.status(400).json({
@@ -417,19 +470,132 @@ const deleteBlog = async (req, res) => {
   }
 };
 
-// return res.status(500).json({
-//     message: error.message,
-//     success: false,
-//   });
+const editBlog = async (req, res) => {
+  console.log(req.body);
+  try {
+    const { newTitle, newDescription } = req.body;
+    const { blogId } = req.params;
+
+    // check blogId
+    if (!blogId) {
+      return res.status(400).json({
+        success: false,
+        message: "Blog ID is required",
+      });
+    }
+
+    // if nothing is provided
+    if (!newTitle && !newDescription) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one field is required to update",
+      });
+    }
+
+    let updateData = {};
+
+    // only title
+    if (newTitle && !newDescription) {
+      updateData.title = newTitle;
+    }
+
+    // only description
+    else if (!newTitle && newDescription) {
+      updateData.description = newDescription;
+    }
+
+    // both
+    else if (newTitle && newDescription) {
+      updateData.title = newTitle;
+      updateData.description = newDescription;
+    }
+
+    const updatedBlog = await Blog.findByIdAndUpdate(blogId, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedBlog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Blog updated successfully",
+      updatedBlog,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+const likeHandler = async (req, res) => {
+  try {
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+      success: false,
+    });
+  }
+};
+
+const dislikeHandler = async (req, res) => {
+  try {
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+      success: false,
+    });
+  }
+};
+
+const commentHandler = async (req, res) => {
+  try {
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+      success: false,
+    });
+  }
+};
+
+const followHandler = async (req, res) => {
+  try {
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+      success: false,
+    });
+  }
+};
+
+const unfollowHandler = async (req, res) => {
+  try {
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+      success: false,
+    });
+  }
+};
 
 module.exports = {
   signUp,
   login,
   logout,
   deleteAccount,
+  userDetails,
+  changePicture,
   changePassword,
   verifyEmail,
   otpVerify,
   createBlog,
   deleteBlog,
+  editBlog,
 };
