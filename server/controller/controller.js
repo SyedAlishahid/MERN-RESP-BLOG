@@ -537,6 +537,46 @@ const editBlog = async (req, res) => {
 
 const likeHandler = async (req, res) => {
   try {
+    const { blogId } = req.params;
+    const userInfo = req.user;
+
+    if (!blogId) {
+      return res.status(400).json({
+        success: false,
+        message: "Id not found~",
+      });
+    }
+
+    const blog = await Blog.findById(blogId);
+    if (!blog) {
+      return res.status(400).json({
+        success: false,
+        message: "Blog not found~",
+      });
+    }
+
+    const alreadyLiked = await blog.likes.includes(userInfo._id);
+
+    if (alreadyLiked) {
+      return res.status(400).json({
+        success: false,
+        message: "Video already Liked~",
+      });
+    }
+
+    const addLike = await blog.likes.push(userInfo._id);
+    blog.save();
+    if (!addLike) {
+      return res.status(400).json({
+        success: false,
+        message: "Cant like the video~",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      likes: addLike,
+    });
   } catch (error) {
     return res.status(500).json({
       message: error.message,
@@ -547,6 +587,36 @@ const likeHandler = async (req, res) => {
 
 const dislikeHandler = async (req, res) => {
   try {
+    const { blogId } = req.params;
+    const userInfo = req.user;
+
+    const blog = await Blog.findById(blogId);
+    if (!blog) {
+      return res.status(400).json({
+        success: false,
+        message: "Blog not found~",
+      });
+    }
+
+    console.log(blog.likes);
+
+    blog.likes = await blog.likes.filter(
+      (id) => id.toString() !== userInfo._id.toString(),
+    );
+
+    blog.save();
+
+    if (!blog.likes) {
+      return res.status(400).json({
+        success: false,
+        message: "Can't Dislike the video!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      dislike: blog.likes,
+    });
   } catch (error) {
     return res.status(500).json({
       message: error.message,
@@ -598,4 +668,6 @@ module.exports = {
   createBlog,
   deleteBlog,
   editBlog,
+  likeHandler,
+  dislikeHandler,
 };

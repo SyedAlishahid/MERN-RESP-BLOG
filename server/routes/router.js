@@ -11,6 +11,8 @@ const {
   createBlog,
   deleteBlog,
   editBlog,
+  likeHandler,
+  dislikeHandler,
 } = require("../controller/controller");
 const upload = require("../multer/multer.js");
 const express = require("express");
@@ -50,5 +52,10 @@ router.post(
 router.post("/delete-blog/:deleteBlg", VerifyJWT, deleteBlog);
 
 router.post("/edit-blog/:blogId", VerifyJWT, editBlog);
+
+router.post("/like/:blogId", VerifyJWT, likeHandler);
+dislikeHandler;
+
+router.post("/dislike/:blogId", VerifyJWT, dislikeHandler);
 
 module.exports = router;
